@@ -60,8 +60,8 @@ rm /tmp/yamj-icon
 # YAMJ plugin configuration
 UPGRADE_PLG_ON_BOOT="false"
 YAMJ_ADD_CRON_ON_BOOT="false"
-YAMJ_LOCATION="/mnt/cache/YAMJ/YAMJ_FLASH"
-YAMJ_DOWNLOAD_LOCATION="/mnt/cache/YAMJ/YAMJ_Downloads"
+YAMJ_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH"
+YAMJ_DOWNLOAD_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_Downloads"
 ]]>
 </INLINE>
 </FILE>
@@ -94,39 +94,39 @@ write_cfg()
 #################
 write_status()
 {
-  echo "# YAMJ status" > /usr/local/emhttp/plugins/yamj/yamj.status
+  echo "# YAMJ status" > $STATUS_FILE
 
-  echo "YAMJ_PLG_HOSTING_SERVER_EXISTS=\"$YAMJ_PLG_HOSTING_SERVER_EXISTS\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_PLG_ONLINE_EXIST=\"$YAMJ_PLG_ONLINE_EXIST\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_PLG_ONLINE_VER=\"$YAMJ_PLG_ONLINE_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_PLG_LOCAL_VER=\"$YAMJ_PLG_LOCAL_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_HOSTING_SERVER_EXISTS=\"$YAMJ_SNP_HOSTING_SERVER_EXISTS\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_ONLINE_EXIST=\"$YAMJ_SNP_ONLINE_EXIST\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_ONLINE_VER=\"$YAMJ_SNP_ONLINE_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_ONLINE_REV=\"$YAMJ_SNP_ONLINE_REV\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_FNL_HOSTING_SERVER_EXISTS=\"$YAMJ_FNL_HOSTING_SERVER_EXISTS\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_FNL_ONLINE_EXIST=\"$YAMJ_FNL_ONLINE_EXIST\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_FNL_ONLINE_VER=\"$YAMJ_FNL_ONLINE_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_FNL_ONLINE_REV=\"$YAMJ_FNL_ONLINE_REV\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_LOCAL_VER=\"$YAMJ_LOCAL_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_LOCAL_REV=\"$YAMJ_LOCAL_REV\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_DOWN_VER=\"$YAMJ_SNP_DOWN_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_SNP_DOWN_REV=\"$YAMJ_SNP_DOWN_REV\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
-  echo "YAMJ_FNL_DOWN_VER=\"$YAMJ_FNL_DOWN_VER\"" >> /usr/local/emhttp/plugins/yamj/yamj.status
+  echo "YAMJ_PLG_HOSTING_SERVER_EXISTS=\"$YAMJ_PLG_HOSTING_SERVER_EXISTS\"" >> $STATUS_FILE
+  echo "YAMJ_PLG_ONLINE_EXIST=\"$YAMJ_PLG_ONLINE_EXIST\"" >> $STATUS_FILE
+  echo "YAMJ_PLG_ONLINE_VER=\"$YAMJ_PLG_ONLINE_VER\"" >> $STATUS_FILE
+  echo "YAMJ_PLG_LOCAL_VER=\"$YAMJ_PLG_LOCAL_VER\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_HOSTING_SERVER_EXISTS=\"$YAMJ_SNP_HOSTING_SERVER_EXISTS\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_ONLINE_EXIST=\"$YAMJ_SNP_ONLINE_EXIST\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_ONLINE_VER=\"$YAMJ_SNP_ONLINE_VER\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_ONLINE_REV=\"$YAMJ_SNP_ONLINE_REV\"" >> $STATUS_FILE
+  echo "YAMJ_FNL_HOSTING_SERVER_EXISTS=\"$YAMJ_FNL_HOSTING_SERVER_EXISTS\"" >> $STATUS_FILE
+  echo "YAMJ_FNL_ONLINE_EXIST=\"$YAMJ_FNL_ONLINE_EXIST\"" >> $STATUS_FILE
+  echo "YAMJ_FNL_ONLINE_VER=\"$YAMJ_FNL_ONLINE_VER\"" >> $STATUS_FILE
+  echo "YAMJ_FNL_ONLINE_REV=\"$YAMJ_FNL_ONLINE_REV\"" >> $STATUS_FILE
+  echo "YAMJ_LOCAL_VER=\"$YAMJ_LOCAL_VER\"" >> $STATUS_FILE
+  echo "YAMJ_LOCAL_REV=\"$YAMJ_LOCAL_REV\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_DOWN_VER=\"$YAMJ_SNP_DOWN_VER\"" >> $STATUS_FILE
+  echo "YAMJ_SNP_DOWN_REV=\"$YAMJ_SNP_DOWN_REV\"" >> $STATUS_FILE
+  echo "YAMJ_FNL_DOWN_VER=\"$YAMJ_FNL_DOWN_VER\"" >> $STATUS_FILE
 }
 
 #################
 # C R O N A D D
 #################
-yamj_cron_add()
-{
+#yamj_cron_add()
+#{
 
-}
+#}
 
 ####################
-# G E T O N L I N E V E R S I O N
+# G E T O N L I N E V E R S I O N S
 ####################
-yamj_getonlineversion()
+yamj_getonlineversions()
 {
   # YAMJ Snapshot hosting server by lainie
   YAMJ_SNP_HOSTING_SERVER="mediaplayersite.com/YAMJ_Latest"
@@ -136,7 +136,7 @@ yamj_getonlineversion()
   # Check if YAMJ Snapshot hosting server is online
   if [ "$YAMJ_SNP_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
-    YAMJ_SNP_ONLINE_VER=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep "Latest build: " | awk 'gsub(/.*yamj-|-.*/,"")')
+    YAMJ_SNP_ONLINE_VER=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep "Latest build: " | awk 'gsub(/.*yamj-|-r.*/,"")')
     YAMJ_SNP_ONLINE_REV=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep "Latest build: " | awk 'gsub(/.*-r|-bin.*/,"")')
   else
     # Set version to server_down - does not exist
@@ -144,7 +144,7 @@ yamj_getonlineversion()
     YAMJ_SNP_ONLINE_REV="server_down"
   fi
   # YAMJ Snapshot filename
-  YAMJ_SNP_ONLINE_FILENAME="yamj-${YAMJ_SNP_ONLINE_VER}-SNAPSHOT-r${YAMJ_SNP_ONLINE_REV}-bin.zip"
+  YAMJ_SNP_ONLINE_FILENAME="yamj-${YAMJ_SNP_ONLINE_VER}-r${YAMJ_SNP_ONLINE_REV}-bin.zip"
   # YAMJ Snapshot hosting server URL
   YAMJ_SNP_URL="http://mediaplayersite.com/sites/default/files/YAMJ"
   # Check if YAMJ Snapshot file exists online
@@ -152,15 +152,16 @@ yamj_getonlineversion()
   YAMJ_SNP_ONLINE_EXIST=$?
 
   # YAMJ Stable hosting server
-  YAMJ_FNL_HOSTING_SERVER="http://code.google.com/p/moviejukebox"
+  YAMJ_FNL_HOSTING_SERVER="http://code.google.com/p/moviejukebox/downloads/list"
   # Get online/offline status of YAMJ Stable hosting server
   wget --quiet --spider $YAMJ_FNL_HOSTING_SERVER
   YAMJ_FNL_HOSTING_SERVER_EXISTS=$?
   # Check if YAMJ Stable hosting server is online
   if [ "$YAMJ_FNL_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
-    YAMJ_FNL_ONLINE_VER=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep "Moviejukebox v" | awk 'gsub(/.*Moviejukebox v| .*/,"")')
-    YAMJ_FNL_ONLINE_REV=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep "Moviejukebox v" | awk 'gsub(/.*Featured r| .*/,"")')
+    YAMJ_FNL_ONLINE_VER=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Moviejukebox v" | awk 'gsub(/.*Moviejukebox v|\n.*/,"")' | tr -d '\n' | tr -d '\r')
+    YAMJ_FNL_ONLINE_REV=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep "Featured, OpSys-All, Type-Archive, r" | awk 'gsub(/.* r|].*/,"")')
+    YAMJ_FNL_ONLINE_REV=$(echo "${YAMJ_FNL_ONLINE_REV%?}")
   else
     # Set version to server_down - does not exist
     YAMJ_FNL_ONLINE_VER="server_down"
@@ -179,15 +180,16 @@ yamj_getonlineversion()
 }
 
 ###################
-# G E T L O C A L V E R S I O N
+# G E T L O C A L V E R S I O N S
 ###################
-yamj_getlocalversion()
+yamj_getlocalversions()
 {
-  if [ -d YAMJ_LOCATION ] ; then
+  if [ -d $YAMJ_LOCATION ] ; then
     if [ -f ${YAMJ_LOCATION}/version.txt ] ; then
       # Get Existing local YAMJ version
-      YAMJ_LOCAL_VER=$(cat ${YAMJ_LOCATION}/version.txt | grep "Version: " | awk 'gsub(/.*Version: |.*/,"")')
-      YAMJ_LOCAL_REV=$(cat ${YAMJ_LOCATION}/version.txt | grep "Revision: r" | awk 'gsub(/.*Revision: r|.*/,"")')
+      YAMJ_LOCAL_VER=$(cat ${YAMJ_LOCATION}/version.txt | grep "Version: " | awk 'gsub(/.*Version: |\n.*/,"")')
+cat /mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH/version.txt | grep "Version: " | awk 'gsub(/.*Version: |.*/,"")'
+      YAMJ_LOCAL_REV=$(cat ${YAMJ_LOCATION}/version.txt | grep "Revision: r" | awk 'gsub(/.*Revision: r|\n.*/,"")')
     else
       YAMJ_LOCAL_VER="no_ver_file"
       YAMJ_LOCAL_REV="no_ver_file"
@@ -198,17 +200,20 @@ yamj_getlocalversion()
     YAMJ_LOCAL_REV="no_local_ver"
   fi
 
-  if [ -d YAMJ_DOWNLOAD_LOCATION ] ; then
-    if [ "$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-r*-bin.zip 2>/dev/null" != "" ] ; then
+  if [ -d $YAMJ_DOWNLOAD_LOCATION ] ; then
+    YAMJ_SNP_FILES=$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-r*-bin.zip 2>/dev/null)
+    ls -1Art /mnt/cache/unRAID_Apps/YAMJ/YAMJ_Downloads/yamj-*-r*-bin.zip 2>/dev/null
+    if [ "$YAMJ_SNP_FILES" != "" ] ; then
       # Get existing downloaded YAMJ version
-      YAMJ_SNP_DOWN_VER=$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-r*-bin.zip 2>/dev/null | tail -n1 | awk 'gsub(/.*yamj-|-r.*/,"")')
-      YAMJ_SNP_DOWN_REV=$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-r*-bin.zip 2>/dev/null | tail -n1 | awk 'gsub(/.*-r|-bin.*/,"")')
+      YAMJ_SNP_DOWN_VER=$(echo $YAMJ_SNP_FILES | tail -n1 | awk 'gsub(/.*yamj-|-r.*/,"")')
+      YAMJ_SNP_DOWN_REV=$(echo $YAMJ_SNP_FILES | tail -n1 | awk 'gsub(/.*-r|-bin.*/,"")')
     else
       YAMJ_SNP_DOWN_VER="no_snp_down"
       YAMJ_SNP_DOWN_REV="no_snp_down"
     fi
-    if [ "$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip 2>/dev/null" != "" ] ; then
-      YAMJ_FNL_DOWN_VER=$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip 2>/dev/null | tail -n1 | awk 'gsub(/.*moviejukebox-|.zip.*/,"")')
+    YAMJ_FNL_FILES=$(ls -1Art ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip 2>/dev/null)
+    if [ "$YAMJ_FNL_FILES" != "" ] ; then
+      YAMJ_FNL_DOWN_VER=$(echo $YAMJ_FNL_FILES | tail -n1 | awk 'gsub(/.*moviejukebox-|.zip.*/,"")')
     else
       YAMJ_FNL_DOWN_VER="no_fnl_down"
     fi
@@ -329,11 +334,14 @@ yamj_boot()
 # M A I N
 ###################
 
-[ -f /boot/config/plugins/yamj/yamj.cfg ] && source /boot/config/plugins/yamj/yamj.cfg
-[ -f /usr/local/emhttp/plugins/yamj/yamj.status ] && source /usr/local/emhttp/plugins/yamj/yamj.status
-
 # YAMJ plugin folder on boot flash drive
 YAMJ_PLUGIN_PATH="/boot/config/plugins/yamj"
+
+# YAMJ status file used for WEBUI updates
+STATUS_FILE="/usr/local/emhttp/plugins/yamj/yamj.status"
+
+[ -f /boot/config/plugins/yamj/yamj.cfg ] && source /boot/config/plugins/yamj/yamj.cfg
+[ -f $STATUS_FILE ] && source $STATUS_FILE
 
 if [ $1 == "updatecfg" ] ; then
   write_cfg
@@ -345,14 +353,23 @@ else
     'writecfg')
       write_cfg
     ;;
-    'updateplg')
-      yamj_updateplg
+    'getonlineversions')
+      yamj_getonlineversions
+    ;;
+    'getlocalversions')
+      yamj_getlocalversions
     ;;
     'getplgversions')
       yamj_getplgversions
     ;;
+    'updateplg')
+      yamj_updateplg
+    ;;
     'boot')
       yamj_boot
+    ;;
+    'writestatus')
+      write_status
     ;;
 
     *)
@@ -413,7 +430,8 @@ Title="YAMJ"
 
 <?PHP
 shell_exec("/etc/rc.d/rc.yamj getplgversions");
-shell_exec("/etc/rc.d/rc.yamj getlocalversion");
+shell_exec("/etc/rc.d/rc.yamj getonlineversions");
+shell_exec("/etc/rc.d/rc.yamj getlocalversions");
 
 $yamj_cfg = parse_ini_file("/boot/config/plugins/yamj/yamj.cfg");
 $yamj_status = parse_ini_file("/usr/local/emhttp/plugins/yamj/yamj.status");
