@@ -49,12 +49,15 @@ rm /tmp/yamj-icon
 ############################################
 # configuration file
 ############################################
-# UPGRADE_PLG_ON_BOOT    - Check and Install new plugin version if exists on hosting server during array mount (true/false)
-# YAMJ_ADD_CRON_ON_BOOT  - Add CRON job during array mount (true/false)
-# YAMJ_LOCATION          - Location (folder) of existing YAMJ installation
-# YAMJ_DOWNLOAD_LOCATION - Location (folder) for YAMJ download
-# YAMJ_RUN_SCRIPT        - Full path for YAMJ run script
-# YAMJ_RUN_SCRIPT_OUT    - Where to send the output of YAMJ run
+# UPGRADE_PLG_ON_BOOT         - Check and Install new plugin version if exists on hosting server during array mount (true/false)
+# YAMJ_ADD_CRON_ON_BOOT       - Add CRON job during array mount (true/false)
+# YAMJ_DOWN_STABLE_ON_BOOT    - Download Latest YAMJ Stable version during during array mount (true/false)
+# YAMJ_DOWN_SNAPSHOT_ON_BOOT  - Download Latest YAMJ Snapshot version during during array mount (true/false)
+# YAMJ_LOCATION               - Location (folder) of existing YAMJ installation
+# YAMJ_DOWNLOAD_LOCATION      - Location (folder) for YAMJ download
+# YAMJ_RUN_SCRIPT             - Full path for YAMJ run script
+# YAMJ_RUN_SCRIPT_OUT         - Where to send the output of YAMJ run
+# YAMJ_CRON                    - Cron settings for YAMJ automation
 ############################################
 <FILE Name="/boot/config/plugins/yamj/yamj.cfg">
 <INLINE>
@@ -62,10 +65,13 @@ rm /tmp/yamj-icon
 # YAMJ plugin configuration
 UPGRADE_PLG_ON_BOOT="false"
 YAMJ_ADD_CRON_ON_BOOT="false"
+YAMJ_DOWN_STABLE_ON_BOOT="false"
+YAMJ_DOWN_SNAPSHOT_ON_BOOT="false"
 YAMJ_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH"
 YAMJ_DOWNLOAD_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_Downloads"
-YAMJ_RUN_SCRIPT="/mnt/cache/unRAID_Apps/YAMJ/My_YAMJ.sh"
+YAMJ_RUN_SCRIPT="/mnt/cache/unRAID_Apps/YAMJ/My_YAMJ_plugin.sh"
 YAMJ_RUN_SCRIPT_OUT="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_log.txt"
+YAMJ_CRON="00 16 * * *"
 ]]>
 </INLINE>
 </FILE>
@@ -91,6 +97,7 @@ write_cfg()
   echo "YAMJ_DOWNLOAD_LOCATION=\"$YAMJ_DOWNLOAD_LOCATION\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
   echo "YAMJ_RUN_SCRIPT=\"$YAMJ_RUN_SCRIPT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
   echo "YAMJ_RUN_SCRIPT_OUT=\"$YAMJ_RUN_SCRIPT_OUT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
+  echo "YAMJ_CRON=\"$YAMJ_CRON\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
 
   logger -trc.yamj -plocal7.info -is "Plugin configuration written"
 }
@@ -248,6 +255,10 @@ yamj_download_fnl()
   if [ "$YAMJ_FNL_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Check if latest version is available on server
     if [ "$YAMJ_FNL_ONLINE_EXIST" == "0" ] ; then
+      if [ ! -d $YAMJ_DOWNLOAD_LOCATION ] ; then
+        logger -trc.yamj -plocal7.info -is "No YAMJ doaload folder exists - Creating folder..."
+        mkdir --parents $YAMJ_DOWNLOAD_LOCATION
+      fi
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ] ; then
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) does not exist in download location - Removing all existing downloaded Stable versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip >/dev/null 2>&1
@@ -275,6 +286,10 @@ yamj_download_snp()
   if [ "$YAMJ_SNP_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Check if latest version is available on server
     if [ "$YAMJ_SNP_ONLINE_EXIST" == "0" ] ; then
+      if [ ! -d $YAMJ_DOWNLOAD_LOCATION ] ; then
+        logger -trc.yamj -plocal7.info -is "No YAMJ doaload folder exists - Creating folder..."
+        mkdir --parents $YAMJ_DOWNLOAD_LOCATION
+      fi
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ] ; then
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) does not exist in download location - Removing all existing downloaded Snapshot versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-bin.zip >/dev/null 2>&1
@@ -408,6 +423,22 @@ yamj_boot()
   else
     logger -trc.yamj -plocal7.info -is "Adding CRON job for YAMJ during array mount is disabled"
   fi
+
+  # Check if CRON jib for YAMJ should be added during array mount
+  if [ $YAMJ_DOWN_STABLE_ON_BOOT == "true" ] ; then
+    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Stable version during array mount ..."
+    yamj_donload_fnl
+  else
+    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Stable version during array mount is disabled"
+  fi
+
+  # Check if CRON jib for YAMJ should be added during array mount
+  if [ $YAMJ_DOWN_SNAPSHOT_ON_BOOT == "true" ] ; then
+    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Snapshot version during array mount ..."
+    yamj_download_snp
+  else
+    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Snapshot version during array mount is disabled"
+  fi
 }
 
 ###################
@@ -424,7 +455,9 @@ STATUS_FILE="/usr/local/emhttp/plugins/yamj/yamj.status"
 [ -f $STATUS_FILE ] && source $STATUS_FILE
 
 if [ $1 == "updatecfg" ] ; then
-  write_cfg
+  logger -trc.yamj -plocal7.info -is "$1, $2, $3, $4, $5, $6, $7, $8"
+  shift \8
+  logger -trc.yamj -plocal7.info -is "$1, $2, $3, $4, $5, $6, $7, $8"
 else
   case "$1" in
     'cron_add')
@@ -559,7 +592,7 @@ $version_actions_exist = "false";
 
 <div style="width: 49%; float:left; border: 0px solid black;">
   <div id="title">
-    <span class="left">Status summary</span>
+    <span class="left">Status</span>
   </div>
 
   <div style="border: 0px solid black;">
@@ -743,6 +776,82 @@ $version_actions_exist = "false";
 
   <div id="title">
     <span class="left">Configuration</span>
+  </div>
+
+  <div>
+    <form name="yamj_settings" method="POST" action="/update.htm" target="progressFrame" onsubmit="validateForm();">
+      <table>
+        <tr>
+          <td colspan="2" align="center">
+            <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj updatecfg">
+            <input type="submit" name="runCmd" value="Save Below Configuration & Implement Immediately">
+            <button type="button" onClick="done();">Return to unRAID Settings Page</button>
+          </td>
+        </tr>
+        <tr style="font-weight:bold; color:#333333; background:#F0F0F0; text-shadow:0 1px 1px #FFFFFF;">
+          <td colspan="2">Mount and Startup options</td>
+        </tr>
+        <tr>
+          <td>Add CRON job for YAMJ during array mount:</td>
+          <td>
+            <select name="arg1" id="arg1" size="1">
+              <?=mk_option($yamj_cfg['YAMJ_ADD_CRON_ON_BOOT'], "true", "Yes");?>
+              <?=mk_option($yamj_cfg['YAMJ_ADD_CRON_ON_BOOT'], "false", "No");?>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Check & Update Plugin during array mount:</td>
+          <td>
+            <select name="arg2" id="arg2" size="1">
+              <?=mk_option($yamj_cfg['UPGRADE_PLG_ON_BOOT'], "true", "Yes");?>
+              <?=mk_option($yamj_cfg['UPGRADE_PLG_ON_BOOT'], "false", "No");?>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Download Latest YAMJ Stable version during array mount:</td>
+          <td>
+            <select name="arg3" id="arg3" size="1">
+              <?=mk_option($yamj_cfg['YAMJ_DOWN_STABLE_ON_BOOT'], "true", "Yes");?>
+              <?=mk_option($yamj_cfg['YAMJ_DOWN_STABLE_ON_BOOT'], "false", "No");?>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Download Latest YAMJ Snapshot version during array mount:</td>
+          <td>
+            <select name="arg4" id="arg4" size="1">
+              <?=mk_option($yamj_cfg['YAMJ_DOWN_SNAPSHOT_ON_BOOT'], "true", "Yes");?>
+              <?=mk_option($yamj_cfg['YAMJ_DOWN_SNAPSHOT_ON_BOOT'], "false", "No");?>
+            </select>
+          </td>
+        </tr>
+        <tr style="font-weight:bold; color:#333333; background:#F0F0F0; text-shadow:0 1px 1px #FFFFFF;">
+          <td colspan="2">YAMJ Settings</td>
+        </tr>
+        <tr>
+          <td>YAMJ folder (existing installation):</td>
+          <td><input type="text" name="arg5" id="arg5" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_LOCATION'];?>"></td>
+        </tr>
+        <tr>
+          <td>YAMJ download folder:</td>
+          <td><input type="text" name="arg6" id="arg6" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_DOWNLOAD_LOCATION'];?>"></td>
+        </tr>
+        <tr>
+          <td>CRON settings for automation of YAMJ scan:</td>
+          <td><input type="text" name="arg7" id="arg7" style="width: 10em;" maxlength="50" value="<?=$yamj_cfg['YAMJ_CRON'];?>"></td>
+        </tr>
+        <tr>
+          <td>Script used for running YAMJ scan:</td>
+          <td><input type="text" name="arg8" id="arg8" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>"></td>
+        </tr>
+        <tr>
+          <td>Log file to output YAMJ scan (use <i>/dev/null</i> if no log needed):</td>
+          <td><input type="text" name="arg9" id="arg9" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>"></td>
+        </tr>
+      </table>
+    </form>
   </div>
 
 </div>
