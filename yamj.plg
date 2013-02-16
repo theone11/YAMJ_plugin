@@ -53,6 +53,8 @@ rm /tmp/yamj-icon
 # YAMJ_ADD_CRON_ON_BOOT  - Add CRON job during array mount (true/false)
 # YAMJ_LOCATION          - Location (folder) of existing YAMJ installation
 # YAMJ_DOWNLOAD_LOCATION - Location (folder) for YAMJ download
+# YAMJ_RUN_SCRIPT        - Full path for YAMJ run script
+# YAMJ_RUN_SCRIPT_OUT    - Where to send the output of YAMJ run
 ############################################
 <FILE Name="/boot/config/plugins/yamj/yamj.cfg">
 <INLINE>
@@ -62,6 +64,8 @@ UPGRADE_PLG_ON_BOOT="false"
 YAMJ_ADD_CRON_ON_BOOT="false"
 YAMJ_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH"
 YAMJ_DOWNLOAD_LOCATION="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_Downloads"
+YAMJ_RUN_SCRIPT="/mnt/cache/unRAID_Apps/YAMJ/My_YAMJ.sh"
+YAMJ_RUN_SCRIPT_OUT="/mnt/cache/unRAID_Apps/YAMJ/YAMJ_log.txt"
 ]]>
 </INLINE>
 </FILE>
@@ -85,6 +89,8 @@ write_cfg()
   echo "YAMJ_ADD_CRON_ON_BOOT=\"$YAMJ_ADD_CRON_ON_BOOT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
   echo "YAMJ_LOCATION=\"$YAMJ_LOCATION\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
   echo "YAMJ_DOWNLOAD_LOCATION=\"$YAMJ_DOWNLOAD_LOCATION\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
+  echo "YAMJ_RUN_SCRIPT=\"$YAMJ_RUN_SCRIPT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
+  echo "YAMJ_RUN_SCRIPT_OUT=\"$YAMJ_RUN_SCRIPT_OUT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
 
   logger -trc.yamj -plocal7.info -is "Plugin configuration written"
 }
@@ -136,8 +142,10 @@ yamj_getonlineversions()
   # Check if YAMJ Snapshot hosting server is online
   if [ "$YAMJ_SNP_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
-    YAMJ_SNP_ONLINE_VER=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep "Latest build: " | awk 'gsub(/.*yamj-|-r.*/,"")')
-    YAMJ_SNP_ONLINE_REV=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep "Latest build: " | awk 'gsub(/.*-r|-bin.*/,"")')
+    YAMJ_SNP_ONLINE_VER=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Current version: " | awk 'gsub(/.*Current version: |\/.*/,"")')
+    YAMJ_SNP_ONLINE_VER=$(echo "${YAMJ_SNP_ONLINE_VER%?}")
+    YAMJ_SNP_ONLINE_REV=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Latest revision: r" | awk 'gsub(/.*Latest revision: r|\/.*/,"")')
+    YAMJ_SNP_ONLINE_REV=$(echo "${YAMJ_SNP_ONLINE_REV%?}")
   else
     # Set version to server_down - does not exist
     YAMJ_SNP_ONLINE_VER="server_down"
@@ -160,7 +168,7 @@ yamj_getonlineversions()
   if [ "$YAMJ_FNL_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
     YAMJ_FNL_ONLINE_VER=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Moviejukebox v" | awk 'gsub(/.*Moviejukebox v|\n.*/,"")' | tr -d '\n' | tr -d '\r')
-    YAMJ_FNL_ONLINE_REV=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep "Featured, OpSys-All, Type-Archive, r" | awk 'gsub(/.* r|].*/,"")')
+    YAMJ_FNL_ONLINE_REV=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Featured, OpSys-All, Type-Archive, r" | awk 'gsub(/.* r|].*/,"")')
     YAMJ_FNL_ONLINE_REV=$(echo "${YAMJ_FNL_ONLINE_REV%?}")
   else
     # Set version to server_down - does not exist
@@ -171,9 +179,10 @@ yamj_getonlineversions()
   YAMJ_FNL_ONLINE_FILENAME="moviejukebox-${YAMJ_FNL_ONLINE_VER}.zip"
   # YAMJ Stable hosting server URL
   YAMJ_FNL_URL="http://moviejukebox.googlecode.com/files"
-  # Check if YAMJ Stable file exists online
-  wget --quiet --spider ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME}
-  YAMJ_FNL_ONLINE_EXIST=$?
+  # Check if YAMJ Stable file exists online - NOT SUPPORTED BY GOOGLE-CODE yet
+#  wget --quiet --spider ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME}
+#  YAMJ_FNL_ONLINE_EXIST=$?
+  YAMJ_FNL_ONLINE_EXIST=0
 
   # Write status to update WEBUI
   write_status
@@ -188,7 +197,6 @@ yamj_getlocalversions()
     if [ -f ${YAMJ_LOCATION}/version.txt ] ; then
       # Get Existing local YAMJ version
       YAMJ_LOCAL_VER=$(cat ${YAMJ_LOCATION}/version.txt | grep "Version: " | awk 'gsub(/.*Version: |\n.*/,"")')
-cat /mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH/version.txt | grep "Version: " | awk 'gsub(/.*Version: |.*/,"")'
       YAMJ_LOCAL_REV=$(cat ${YAMJ_LOCATION}/version.txt | grep "Revision: r" | awk 'gsub(/.*Revision: r|\n.*/,"")')
     else
       YAMJ_LOCAL_VER="no_ver_file"
@@ -226,6 +234,60 @@ cat /mnt/cache/unRAID_Apps/YAMJ/YAMJ_FLASH/version.txt | grep "Version: " | awk 
 
   # Write status to update WEBUI
   write_status
+}
+
+###################
+# D O W N L O A D F N L
+###################
+yamj_download_fnl()
+{
+  # Check online status
+  yamj_getonlineversions
+
+  # Check if YAMJ Stable hosting servers are online
+  if [ "$YAMJ_FNL_HOSTING_SERVER_EXISTS" == "0" ] ; then
+    # Check if latest version is available on server
+    if [ "$YAMJ_FNL_ONLINE_EXIST" == "0" ] ; then
+      if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ] ; then
+        logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) does not exist in download location - Removing all existing downloaded Stable versions and downloading..."
+        rm ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip >/dev/null 2>&1
+        wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME} >/dev/null 2>&1
+      else
+        logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
+      fi
+    else
+      logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable version does not exist online - Cannot download new version"
+    fi
+  else
+    logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable hosting server is OFFLINE - Cannot check for new version"
+  fi
+}
+
+###################
+# D O W N L O A D S N P
+###################
+yamj_download_snp()
+{
+  # Check online status
+  yamj_getonlineversions
+
+  # Check if YAMJ Snapshot hosting servers are online
+  if [ "$YAMJ_SNP_HOSTING_SERVER_EXISTS" == "0" ] ; then
+    # Check if latest version is available on server
+    if [ "$YAMJ_SNP_ONLINE_EXIST" == "0" ] ; then
+      if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ] ; then
+        logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) does not exist in download location - Removing all existing downloaded Snapshot versions and downloading..."
+        rm ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-bin.zip >/dev/null 2>&1
+        wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME} >/dev/null 2>&1
+      else
+        logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
+      fi
+    else
+      logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot version does not exist online - Cannot download new version"
+    fi
+  else
+    logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot hosting server is OFFLINE - Cannot check for new version"
+  fi
 }
 
 #################
@@ -308,6 +370,24 @@ yamj_updateplg()
 }
 
 ###################
+# R U N S C R I P T
+###################
+yamj_runscript()
+{
+  # Check if YAMJ exists
+  if [ -d $YAMJ_LOCATION ] ; then
+    if [ -f $YAMJ_RUN_SCRIPT ] ; then
+      logger -trc.yamj -plocal7.info -is "Running YAMJ run script ..."
+      nohup $YAMJ_RUN_SCRIPT all > $YAMJ_RUN_SCRIPT_OUT 2>&1 &
+    else
+      logger -trc.yamj -plocal7.info -is "YAMJ run script ($YAMJ_RUN_SCRIPT) does not exist - Nothing to run"
+    fi
+  else
+    logger -trc.yamj -plocal7.info -is "YAMJ location ($YAMJ_LOCATION) does not exist - Cannot run script"
+  fi
+}
+
+###################
 # B O O T
 ###################
 yamj_boot()
@@ -362,6 +442,12 @@ else
     'getplgversions')
       yamj_getplgversions
     ;;
+    'downloadfnl')
+      yamj_download_fnl
+    ;;
+    'downloadsnp')
+      yamj_download_snp
+    ;;
     'updateplg')
       yamj_updateplg
     ;;
@@ -370,6 +456,9 @@ else
     ;;
     'writestatus')
       write_status
+    ;;
+    'runscript')
+      yamj_runscript
     ;;
 
     *)
@@ -436,6 +525,8 @@ shell_exec("/etc/rc.d/rc.yamj getlocalversions");
 $yamj_cfg = parse_ini_file("/boot/config/plugins/yamj/yamj.cfg");
 $yamj_status = parse_ini_file("/usr/local/emhttp/plugins/yamj/yamj.status");
 
+$yamj_location = $yamj_cfg['YAMJ_LOCATION'];
+
 $plg_server = $yamj_status['YAMJ_PLG_HOSTING_SERVER_EXISTS'];
 $plg_online_exist = $yamj_status['YAMJ_PLG_ONLINE_EXIST'];
 $plg_online_ver = $yamj_status['YAMJ_PLG_ONLINE_VER'];
@@ -454,9 +545,9 @@ $fnl_online_rev = $yamj_status['YAMJ_FNL_ONLINE_REV'];
 $loc_ver = $yamj_status['YAMJ_LOCAL_VER'];
 $loc_rev = $yamj_status['YAMJ_LOCAL_REV'];
 
-$down_snp_ver = $yamj_status['YAMJ_SNP_DOWN_VER'];
-$down_snp_rev = $yamj_status['YAMJ_SNP_DOWN_REV'];
-$down_fnl_ver = $yamj_status['YAMJ_FNL_DOWN_VER'];
+$snp_down_ver = $yamj_status['YAMJ_SNP_DOWN_VER'];
+$snp_down_rev = $yamj_status['YAMJ_SNP_DOWN_REV'];
+$fnl_down_ver = $yamj_status['YAMJ_FNL_DOWN_VER'];
 
 $control_actions_exist = "false";
 $version_actions_exist = "false";
@@ -471,51 +562,180 @@ $version_actions_exist = "false";
     <span class="left">Status summary</span>
   </div>
 
+  <div style="border: 0px solid black;">
+    <span class="left">
+      <p>Stable version taken from <u><a href="http://code.google.com/p/moviejukebox/" target="_blank">MovieJukebox on Googlecode</a></u></p>
+      <p>Snapshot version taken from <u><a href="http://mediaplayersite.com/YAMJ_Latest" target="_blank">YAMJ on Omertron's Media Player Site</a></u></p>
+      <p>Local YAMJ <?=$yamj_location;?>:
+        <?if ($loc_ver=="no_local_ver"):?>
+          <span class="red-text"> YAMJ folder does not exist</span>
+        <?else:?>
+          <?if ($loc_ver=="no_ver_file"):?>
+            <span class="red-text"> YAMJ version file does not exist in YAMJ folder</span>
+          <?else:?>
+            <span class="green-text"><b> v<?=$loc_ver;?> r<?=$loc_rev;?></b></span>
+          <?endif;?>
+        <?endif;?>
+      </p>
+    </span>
+  </div>
+  
   <br></br>
 
-<?=$plg_server;?>
-<br></br>
-<?=$plg_online_exist;?>
-<br></br>
-<?=$plg_online_ver;?>
-<br></br>
-<?=$plg_loc_ver;?>
-
-<br></br>
-<?=$snp_server;?>
-<br></br>
-<?=$snp_online_exist;?>
-<br></br>
-<?=$snp_online_ver;?>
-<br></br>
-<?=$snp_online_rev;?>
-
-<br></br>
-<?=$fnl_server;?>
-<br></br>
-<?=$fnl_online_exist;?>
-<br></br>
-<?=$fnl_online_ver;?>
-<br></br>
-<?=$fnl_online_rev;?>
-
-<br></br>
-<?=$loc_ver;?>
-<br></br>
-<?=$loc_rev;?>
-
-<br></br>
-<?=$down_snp_ver;?>
-<br></br>
-<?=$down_snp_rev;?>
-<br></br>
-<?=$down_fnl_ver;?>
+  <div style="border: 0px solid black;">
+    <table>
+      <tr style="font-weight:bold; color:#333333; background:#F0F0F0; text-shadow:0 1px 1px #FFFFFF;">
+        <td>Package</td>
+        <td>Online Version</td>
+        <td>Downloaded Version</td>
+      </tr>
+      <tr style="font-weight:bold; background:#FFFFFF;">
+        <td>YAMJ Stable</td>
+        <td>
+          <?if ($fnl_server=="0"):?>
+            <?if ($fnl_online_exist=="0"):?>
+              <span class="green-text">v<?=$fnl_online_ver;?> r<?=$fnl_online_rev;?></span>
+            <?else:?>
+              <span class="red-text">No online stable version</span>
+            <?endif;?>
+          <?else:?>
+            <span class="red-text">OFFLINE</span>
+          <?endif;?>
+        </td>
+        <td>
+          <?if ($fnl_down_ver!="no_fnl_down"):?>
+            <span class="green-text">v<?=$fnl_down_ver;?></span>
+          <?else:?>
+            <span class="red-text">No downloaded stable version</span>
+          <?endif;?>
+        </td>
+      </tr>
+      <tr style="font-weight:bold; background:#FFFFFF;">
+        <td>YAMJ Snapshot</td>
+        <td>
+          <?if ($snp_server=="0"):?>
+            <?if ($snp_online_exist=="0"):?>
+              <span class="green-text">v<?=$snp_online_ver;?> r<?=$snp_online_rev;?></span>
+            <?else:?>
+              <span class="red-text">No online snapshot version</span>
+            <?endif;?>
+          <?else:?>
+            <span class="red-text">OFFLINE</span>
+          <?endif;?>
+        </td>
+        <td>
+          <?if ($snp_down_ver!="no_snp_down"):?>
+            <span class="green-text">v<?=$snp_down_ver;?> r<?=$snp_down_rev;?></span>
+          <?else:?>
+            <span class="red-text">No downloaded snapshot version</span>
+          <?endif;?>
+        </td>
+      </tr>
+      <tr style="font-weight:bold; background:#FFFFFF;">
+        <td>YAMJ Plugin</td>
+        <td>
+          <?if ($plg_server=="0"):?>
+            <?if ($plg_online_exist=="0"):?>
+              <span class="green-text">v<?=$plg_online_ver;?></span>
+            <?else:?>
+              <span class="red-text">No online plugin</span>
+            <?endif;?>
+          <?else:?>
+            <span class="red-text">OFFLINE</span>
+          <?endif;?>
+        </td>
+        <td>
+          <?if ($plg_loc_ver!="no_local_plg"):?>
+            <span class="green-text">v<?=$plg_loc_ver;?></span>
+          <?else:?>
+            <span class="red-text">No local plugin</span>
+          <?endif;?>
+        </td>
+      </tr>
+    </table>
+  </div>
 
   <div id="title">
     <span class="left">Actions</span>
   </div>
 
   <br></br>
+
+  <div>
+    <table>
+      <tr style="font-weight:bold; color:#333333; background:#F0F0F0; text-shadow:0 1px 1px #FFFFFF;">
+        <td colspan="2">Control Actions</td>
+      </tr>
+      <?if ($loc_ver != "no_local_ver"):?>
+        <tr>
+          <td width="30%">
+            <form name="runscript" method="POST" action="/update.htm" target="progressFrame">
+              <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj runscript">
+              <input type="submit" name="runCmd" value="Run YAMJ">
+            </form>
+          </td>
+          <td>Run YAMJ Script</td>
+        </tr>
+        <?$control_actions_exist = "true"?>
+      <?endif;?>
+      <?if ($control_actions_exist=="false"):?>
+        <tr>
+          <td colspan="2" align="center">No Control Actions available</td>
+        </tr>
+      <?endif;?>
+    </table>
+  </div>
+
+  <br></br>
+
+  <div style="border: 0px solid black;">
+    <table>
+      <tr style="font-weight:bold; color:#333333; background:#F0F0F0; text-shadow:0 1px 1px #FFFFFF;">
+        <td colspan="2">Version Actions</td>
+      </tr>
+      <?if (($fnl_online_exist=="0") && ($fnl_down_ver!=$fnl_online_ver)):?>
+        <tr>
+		      <td width="30%">
+            <form name="downloadfnl" method="POST" action="/update.htm" target="progressFrame">
+              <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj downloadfnl">
+              <input type="submit" name="runCmd" value="Download Lateset Stable">
+            </form>
+          </td>
+          <td>Stable ONLINE version different than Stable LOCAL version</td>
+		    </tr>
+        <?$version_actions_exist="true"?>
+      <?endif;?>
+      <?if (($snp_online_exist=="0") && ($snp_down_rev!=$snp_online_rev)):?>
+        <tr>
+		      <td width="30%">
+            <form name="downloadsnp" method="POST" action="/update.htm" target="progressFrame">
+              <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj downloadsnp">
+              <input type="submit" name="runCmd" value="Download Lateset Snapshot">
+            </form>
+          </td>
+          <td>Snapshot ONLINE version different than Snapshot LOCAL version</td>
+		    </tr>
+        <?$version_actions_exist="true"?>
+      <?endif;?>
+      <?if (($plg_online_exist=="0") && ($plg_online_ver!=$plg_loc_ver)):?>
+        <tr>
+          <td width="30%">
+            <form name="updateplg" method="POST" action="/update.htm" target="progressFrame">
+              <input type="hidden" name="cmd" value="/etc/rc.d/rc.virtualbox updateplg">
+              <input type="submit" name="runCmd" value="Update Plugin">
+            </form>
+          </td>
+          <td>ONLINE Plugin version different than LOCAL Plugin version</td>
+        </tr>
+        <?$version_actions_exist="true"?>
+      <?endif;?>
+      <?if ($version_actions_exist=="false"):?>
+        <tr>
+          <td colspan="2" align="center">No Version Actions available</td>
+        </tr>
+      <?endif;?>
+    </table>
+  </div>
 
 </div>
     
