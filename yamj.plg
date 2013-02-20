@@ -282,13 +282,13 @@ yamj_download_fnl()
         rm ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip >/dev/null 2>&1
         wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME} >/dev/null 2>&1
       else
-        logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
+        logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
       fi
     else
-      logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable version does not exist online - Cannot download new version"
+      logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable version does not exist online - Cannot download new version"
     fi
   else
-    logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Stable hosting server is OFFLINE - Cannot check for new version"
+    logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable hosting server is OFFLINE - Cannot check for new version"
   fi
 }
 
@@ -313,13 +313,13 @@ yamj_download_snp()
         rm ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-bin.zip >/dev/null 2>&1
         wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME} >/dev/null 2>&1
       else
-        logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
+        logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
       fi
     else
-      logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot version does not exist online - Cannot download new version"
+      logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot version does not exist online - Cannot download new version"
     fi
   else
-    logger -trc.virtualbox -plocal7.info -is "Latest YAMJ Snapshot hosting server is OFFLINE - Cannot check for new version"
+    logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot hosting server is OFFLINE - Cannot check for new version"
   fi
 }
 
@@ -785,7 +785,7 @@ $version_actions_exist = "false";
         <tr>
           <td width="30%">
             <form name="updateplg" method="POST" action="/update.htm" target="progressFrame">
-              <input type="hidden" name="cmd" value="/etc/rc.d/rc.virtualbox updateplg">
+              <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj updateplg">
               <input type="submit" name="runCmd" value="Update Plugin">
             </form>
           </td>
