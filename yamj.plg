@@ -3,7 +3,7 @@
 
 ############################################
 # YAMJ Plugin by Dan Kessler
-# Release Version v0.2
+# Release Version v0.3
 ############################################
 
 ############################################
@@ -434,6 +434,7 @@ yamj_boot()
   # Check if YAMJ CRON job should be added during array mount
   if [ $YAMJ_ADD_CRON_ON_BOOT == "true" ] ; then
     logger -trc.yamj -plocal7.info -is "Adding Scheduled YAMJ Scan during array mount ..."
+    yamj_removecron
     yamj_addcron
   else
     logger -trc.yamj -plocal7.info -is "Adding Scheduled YAMJ Scan during array mount is disabled"
@@ -488,7 +489,7 @@ yamj_addcron()
 ###################
 yamj_updatecfg()
 {
-  # YAMJ arguments file used for WEBUI configuration update
+  # Arguments file used for WEBUI configuration update
   ARGUMENTS_FILE="/usr/local/emhttp/plugins/yamj/yamj.args"
 
   [ -f $ARGUMENTS_FILE ] && source $ARGUMENTS_FILE
@@ -569,8 +570,6 @@ yamj_updatecfg()
   fi
   YAMJ_DOWNLOAD_LOCATION=$YAMJ_DOWNLOAD_LOCATION_NEW
 
-  echo $UPGRADE_PLG_ON_BOOT_NEW,$YAMJ_DOWN_STABLE_ON_BOOT_NEW,$YAMJ_DOWN_SNAPSHOT_ON_BOOT_NEW,$YAMJ_ADD_CRON_ON_BOOT_NEW,$YAMJ_CRON_MIN_NEW,$YAMJ_CRON_HOUR_NEW,$YAMJ_CRON_DAY_NEW,$YAMJ_CRON_MONTH_NEW,$YAMJ_CRON_WEEKDAY_NEW,$YAMJ_LOCATION_NEW,$YAMJ_DOWNLOAD_LOCATION_NEW,$YAMJ_RUN_SCRIPT_NEW,$YAMJ_RUN_SCRIPT_OUT_NEW
-  echo $UPGRADE_PLG_ON_BOOT,$YAMJ_DOWN_STABLE_ON_BOOT,$YAMJ_DOWN_SNAPSHOT_ON_BOOT,$YAMJ_ADD_CRON_ON_BOOT,$YAMJ_CRON_MIN,$YAMJ_CRON_HOUR,$YAMJ_CRON_DAY,$YAMJ_CRON_MONTH,$YAMJ_CRON_WEEKDAY,$YAMJ_LOCATION,$YAMJ_DOWNLOAD_LOCATION,$YAMJ_RUN_SCRIPT,$YAMJ_RUN_SCRIPT_OUT
   write_cfg
 }
 
