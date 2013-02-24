@@ -3,7 +3,7 @@
 
 ############################################
 # YAMJ Plugin by Dan Kessler
-# Release Version v0.3
+# Release Version v0.3.1
 ############################################
 
 ############################################
@@ -846,9 +846,8 @@ $version_actions_exist = "false";
       <?if ($loc_ver != "no_local_ver"):?>
         <tr>
           <td width="30%">
-            <form name="runscript" method="POST" action="/update.htm" target="progressFrame">
-              <input type="hidden" name="cmd" value="/etc/rc.d/rc.yamj runscript">
-              <input type="submit" name="runCmd" value="Run YAMJ">
+            <form name="runscript" method="POST" action="/plugins/yamj/yamj_runscript_bg.php" target="progressFrame">
+              <input type="submit" value="Run YAMJ">
             </form>
           </td>
           <td>Run YAMJ script in background now</td>
@@ -1069,6 +1068,26 @@ echo "Please wait while updating configuration...";
 $file = "/usr/local/emhttp/plugins/yamj/yamj.args";
 file_put_contents($file, $arguments);
 shell_exec("/etc/rc.d/rc.yamj updatecfg");
+?>
+
+<HTML>
+<HEAD><SCRIPT>var goback=parent.location;</SCRIPT></HEAD>
+<BODY onLoad="parent.location=goback;"</BODY>
+</HTML>
+
+]]>
+</INLINE>
+</FILE>
+
+############################################
+# WEBUI Run Script in BackGround page
+############################################
+<FILE Name="/usr/local/emhttp/plugins/yamj/yamj_runscript_bg.php">
+<INLINE>
+<![CDATA[
+
+<?PHP
+shell_exec("nohup /etc/rc.d/rc.yamj runscript &");
 ?>
 
 <HTML>
