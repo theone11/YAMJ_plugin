@@ -913,6 +913,9 @@ $version_actions_exist = "false";
     </table>
   </div>
 
+  <br></br>
+  <br></br>
+
 </div>
     
 <div style="width: 49%; float:right; border: 0px solid black;">
@@ -1013,9 +1016,10 @@ $version_actions_exist = "false";
     </form>
   </div>
 
-</div>
+  <br></br>
+  <br></br>
 
-<br></br>
+</div>
 
 </BODY>
 </HTML>
