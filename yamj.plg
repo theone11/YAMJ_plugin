@@ -3,7 +3,7 @@
 
 ############################################
 # YAMJ Plugin by Dan Kessler
-# Release Version v0.3.2
+# Release Version v0.3.2.1
 ############################################
 
 ############################################
@@ -66,9 +66,9 @@ YAMJ_RUN_SCRIPT_OUT="/boot/flash/YAMJ/YAMJ_log.txt"
 <INLINE>
 <![CDATA[
 # Get icon
-wget --quiet --spider --no-check-certificate https://raw.github.com/theone11/YAMJ_plugin/master/yamj.png
+wget --quiet --spider --no-check-certificate --timeout=60 https://raw.github.com/theone11/YAMJ_plugin/master/yamj.png
 if [ $? == "0" ] ; then
-  wget --quiet --no-check-certificate -O /boot/config/plugins/yamj/yamj.png https://raw.github.com/theone11/YAMJ_plugin/master/yamj.png > /dev/null 2>&1
+  wget --quiet --no-check-certificate --timeout=60 -O /boot/config/plugins/yamj/yamj.png https://raw.github.com/theone11/YAMJ_plugin/master/yamj.png > /dev/null 2>&1
   logger -trc.yamj -plocal7.info -is "Icon downloaded from icon hosting server"
 else
   logger -trc.yamj -plocal7.info -is "No icon to download from icon hosting server"
@@ -159,14 +159,14 @@ yamj_getonlineversions()
   # YAMJ Snapshot hosting server by lainie
   YAMJ_SNP_HOSTING_SERVER="mediaplayersite.com/YAMJ_Latest"
   # Get online/offline status of YAMJ Snapshot hosting server
-  wget --quiet --spider $YAMJ_SNP_HOSTING_SERVER
+  wget --quiet --spider --timeout=60 $YAMJ_SNP_HOSTING_SERVER
   YAMJ_SNP_HOSTING_SERVER_EXISTS=$?
   # Check if YAMJ Snapshot hosting server is online
   if [ "$YAMJ_SNP_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
-    YAMJ_SNP_ONLINE_VER=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Current version: " | awk 'gsub(/.*Current version: |\/.*/,"")')
+    YAMJ_SNP_ONLINE_VER=$(wget --timeout=60 ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Current version: " | awk 'gsub(/.*Current version: |\/.*/,"")')
     YAMJ_SNP_ONLINE_VER=$(echo "${YAMJ_SNP_ONLINE_VER%?}")
-    YAMJ_SNP_ONLINE_REV=$(wget ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Latest revision: r" | awk 'gsub(/.*Latest revision: r|\/.*/,"")')
+    YAMJ_SNP_ONLINE_REV=$(wget --timeout=60 ${YAMJ_SNP_HOSTING_SERVER} -q -O - | grep -m 1 "Latest revision: r" | awk 'gsub(/.*Latest revision: r|\/.*/,"")')
     YAMJ_SNP_ONLINE_REV=$(echo "${YAMJ_SNP_ONLINE_REV%?}")
   else
     # Set version to server_down - does not exist
@@ -178,19 +178,19 @@ yamj_getonlineversions()
   # YAMJ Snapshot hosting server URL
   YAMJ_SNP_URL="http://mediaplayersite.com/sites/default/files/YAMJ"
   # Check if YAMJ Snapshot file exists online
-  wget --quiet --spider ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME}
+  wget --quiet --spider --timeout=60 ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME}
   YAMJ_SNP_ONLINE_EXIST=$?
 
   # YAMJ Stable hosting server
   YAMJ_FNL_HOSTING_SERVER="http://code.google.com/p/moviejukebox/downloads/list"
   # Get online/offline status of YAMJ Stable hosting server
-  wget --quiet --spider $YAMJ_FNL_HOSTING_SERVER
+  wget --quiet --spider --timeout=60 $YAMJ_FNL_HOSTING_SERVER
   YAMJ_FNL_HOSTING_SERVER_EXISTS=$?
   # Check if YAMJ Stable hosting server is online
   if [ "$YAMJ_FNL_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Get latest version number from server
-    YAMJ_FNL_ONLINE_VER=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Moviejukebox v" | awk 'gsub(/.*Moviejukebox v|\n.*/,"")' | tr -d '\n' | tr -d '\r')
-    YAMJ_FNL_ONLINE_REV=$(wget ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Featured, OpSys-All, Type-Archive, r" | awk 'gsub(/.* r|].*/,"")')
+    YAMJ_FNL_ONLINE_VER=$(wget --timeout=60 ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Moviejukebox v" | awk 'gsub(/.*Moviejukebox v|\n.*/,"")' | tr -d '\n' | tr -d '\r')
+    YAMJ_FNL_ONLINE_REV=$(wget --timeout=60 ${YAMJ_FNL_HOSTING_SERVER} -q -O - | grep -m 1 "Featured, OpSys-All, Type-Archive, r" | awk 'gsub(/.* r|].*/,"")')
     YAMJ_FNL_ONLINE_REV=$(echo "${YAMJ_FNL_ONLINE_REV%?}")
   else
     # Set version to server_down - does not exist
@@ -202,7 +202,7 @@ yamj_getonlineversions()
   # YAMJ Stable hosting server URL
   YAMJ_FNL_URL="http://moviejukebox.googlecode.com/files"
   # Check if YAMJ Stable file exists online - NOT SUPPORTED BY GOOGLE-CODE yet
-#  wget --quiet --spider ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME}
+#  wget --quiet --spider --timeout=60 ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME}
 #  YAMJ_FNL_ONLINE_EXIST=$?
   YAMJ_FNL_ONLINE_EXIST=0
 
@@ -277,7 +277,7 @@ yamj_download_fnl()
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ] ; then
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) does not exist in download location - Removing all existing downloaded Stable versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip >/dev/null 2>&1
-        wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME} >/dev/null 2>&1
+        wget -nv --timeout=60 -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME} >/dev/null 2>&1
       else
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
       fi
@@ -308,7 +308,7 @@ yamj_download_snp()
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ] ; then
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) does not exist in download location - Removing all existing downloaded Snapshot versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-bin.zip >/dev/null 2>&1
-        wget -nv -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME} >/dev/null 2>&1
+        wget -nv --timeout=60 -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME} >/dev/null 2>&1
       else
         logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
       fi
@@ -330,16 +330,16 @@ yamj_getplgversions()
   # Plugin hosting server URL + filename
   YAMJ_PLG_URL="https://raw.github.com/theone11/YAMJ_plugin/master/yamj.plg"
   # Get online/offline status of plugin hosting server
-  wget --quiet --spider --no-check-certificate $YAMJ_PLG_HOSTING_SERVER
+  wget --quiet --spider --no-check-certificate --timeout=60 $YAMJ_PLG_HOSTING_SERVER
   YAMJ_PLG_HOSTING_SERVER_EXISTS=$?
   # Check if plugin hosting server is online
   if [ "$YAMJ_PLG_HOSTING_SERVER_EXISTS" == "0" ] ; then
     # Check if plugin file exists online
-    wget --quiet --spider --no-check-certificate $YAMJ_PLG_URL
+    wget --quiet --spider --no-check-certificate --timeout=60 $YAMJ_PLG_URL
     YAMJ_PLG_ONLINE_EXIST=$?
     if [ "$YAMJ_PLG_ONLINE_EXIST" == "0" ] ; then
       # Get latest version number from server
-      YAMJ_PLG_ONLINE_VER=$(wget --no-check-certificate --quiet $YAMJ_PLG_URL -O - | grep -m 1 "Release Version v" | awk 'gsub(/.*Release Version v|*/,"")')
+      YAMJ_PLG_ONLINE_VER=$(wget --no-check-certificate --quiet --timeout=60 $YAMJ_PLG_URL -O - | grep -m 1 "Release Version v" | awk 'gsub(/.*Release Version v|*/,"")')
     else
       YAMJ_PLG_ONLINE_VER="no_online_plg"
     fi
@@ -382,7 +382,7 @@ yamj_updateplg()
           logger -trc.yamj -plocal7.info -is "Upgrading local plugin (v$YAMJ_PLG_LOCAL_VER) to hosting server plugin (v$YAMJ_PLG_ONLINE_VER)"
         fi
         # Download new plugin version
-        wget --no-check-certificate --quiet $YAMJ_PLG_URL -O /boot/config/plugins/yamj.plg
+        wget --no-check-certificate --quiet --timeout=60 $YAMJ_PLG_URL -O /boot/config/plugins/yamj.plg
         # Install new plugin
         /usr/local/sbin/installplg /boot/config/plugins/yamj.plg
         logger -trc.yamj -plocal7.info -is "New/Updated plugin installation complete"
