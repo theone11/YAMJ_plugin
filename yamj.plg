@@ -3,7 +3,7 @@
 
 ############################################
 # YAMJ Plugin by Dan Kessler
-# Release Version v0.3.2.1
+# Release Version v0.3.2.2
 ############################################
 
 ############################################
@@ -70,15 +70,19 @@ wget --quiet --spider --no-check-certificate --timeout=60 https://raw.github.com
 if [ $? == "0" ] ; then
   wget --quiet --no-check-certificate --timeout=60 -O /boot/config/plugins/yamj/yamj.png https://raw.github.com/theone11/YAMJ_plugin/master/yamj.png > /dev/null 2>&1
   logger -trc.yamj -plocal7.info -is "Icon downloaded from icon hosting server"
+  echo "Icon downloaded from icon hosting server"
 else
   logger -trc.yamj -plocal7.info -is "No icon to download from icon hosting server"
+  echo "No icon to download from icon hosting server"
 fi
 if [ -f /boot/config/plugins/yamj/yamj.png ] ; then
   mkdir --parents /usr/local/emhttp/plugins/yamj
   cp --force /boot/config/plugins/yamj/yamj.png /usr/local/emhttp/plugins/yamj/yamj.png
   logger -trc.yamj -plocal7.info -is "Icon copied to emhttp plugin folder"
+  echo "Icon copied to emhttp plugin folder"
 else
   logger -trc.yamj -plocal7.info -is "Icon does not exist locally - cannot copy to emhttp plugin folder"
+  echo "Icon does not exist locally - cannot copy to emhttp plugin folder"
 fi
 rm /tmp/yamj-icon
 ]]>
@@ -92,6 +96,15 @@ rm /tmp/yamj-icon
 <INLINE>
 <![CDATA[
 #!/bin/sh
+
+#################
+# L O G I T
+#################
+logit()
+{
+  logger -trc.yamj -plocal7.info -is "$1"
+  echo "$1"
+}
 
 #################
 # W R I T E C F G
@@ -114,7 +127,7 @@ write_cfg()
   echo "YAMJ_RUN_SCRIPT=\"$YAMJ_RUN_SCRIPT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
   echo "YAMJ_RUN_SCRIPT_OUT=\"$YAMJ_RUN_SCRIPT_OUT\"" >> ${YAMJ_PLUGIN_PATH}/yamj.cfg
 
-  logger -trc.yamj -plocal7.info -is "Plugin configuration written"
+  logit "Plugin configuration written"
 }
 
 #################
@@ -271,21 +284,21 @@ yamj_download_fnl()
     # Check if latest version is available on server
     if [ "$YAMJ_FNL_ONLINE_EXIST" == "0" ] ; then
       if [ ! -d $YAMJ_DOWNLOAD_LOCATION ] ; then
-        logger -trc.yamj -plocal7.info -is "No YAMJ doaload folder exists - Creating folder..."
+        logit "No YAMJ doaload folder exists - Creating folder..."
         mkdir --parents $YAMJ_DOWNLOAD_LOCATION
       fi
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ] ; then
-        logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) does not exist in download location - Removing all existing downloaded Stable versions and downloading..."
+        logit "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) does not exist in download location - Removing all existing downloaded Stable versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/moviejukebox-*.zip >/dev/null 2>&1
         wget -nv --timeout=60 -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_FNL_ONLINE_FILENAME} ${YAMJ_FNL_URL}/${YAMJ_FNL_ONLINE_FILENAME} >/dev/null 2>&1
       else
-        logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
+        logit "Latest YAMJ Stable (v${YAMJ_FNL_ONLINE_VER}) exists locally in download location - No need to download"
       fi
     else
-      logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable version does not exist online - Cannot download new version"
+      logit "Latest YAMJ Stable version does not exist online - Cannot download new version"
     fi
   else
-    logger -trc.yamj -plocal7.info -is "Latest YAMJ Stable hosting server is OFFLINE - Cannot check for new version"
+    logit "Latest YAMJ Stable hosting server is OFFLINE - Cannot check for new version"
   fi
 }
 
@@ -302,21 +315,21 @@ yamj_download_snp()
     # Check if latest version is available on server
     if [ "$YAMJ_SNP_ONLINE_EXIST" == "0" ] ; then
       if [ ! -d $YAMJ_DOWNLOAD_LOCATION ] ; then
-        logger -trc.yamj -plocal7.info -is "No YAMJ doaload folder exists - Creating folder..."
+        logit "No YAMJ download folder exists - Creating folder..."
         mkdir --parents $YAMJ_DOWNLOAD_LOCATION
       fi
       if [ ! -f ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ] ; then
-        logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) does not exist in download location - Removing all existing downloaded Snapshot versions and downloading..."
+        logit "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) does not exist in download location - Removing all existing downloaded Snapshot versions and downloading..."
         rm ${YAMJ_DOWNLOAD_LOCATION}/yamj-*-bin.zip >/dev/null 2>&1
         wget -nv --timeout=60 -O ${YAMJ_DOWNLOAD_LOCATION}/${YAMJ_SNP_ONLINE_FILENAME} ${YAMJ_SNP_URL}/${YAMJ_SNP_ONLINE_FILENAME} >/dev/null 2>&1
       else
-        logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
-      fi
+        logit "Latest YAMJ Snapshot (v${YAMJ_SNP_ONLINE_VER} r${YAMJ_SNP_ONLINE_REV}) exists locally in downlaod location - No need to download"
+        fi
     else
-      logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot version does not exist online - Cannot download new version"
+      logit "Latest YAMJ Snapshot version does not exist online - Cannot download new version"
     fi
   else
-    logger -trc.yamj -plocal7.info -is "Latest YAMJ Snapshot hosting server is OFFLINE - Cannot check for new version"
+    logit "Latest YAMJ Snapshot hosting server is OFFLINE - Cannot check for new version"
   fi
 }
 
@@ -377,25 +390,25 @@ yamj_updateplg()
       if [ "$YAMJ_PLG_ONLINE_VER" != "$YAMJ_PLG_LOCAL_VER" ] ; then
         # Check if local plugin doesn't exist
         if [ "$YAMJ_PLG_LOCAL_VER" == "no_local_plg" ] ; then
-          logger -trc.yamj -plocal7.info -is "Local plugin does not exist. Installing latest plugin version from hosting server (v$YAMJ_PLG_ONLINE_VER)"
+          logit "Local plugin does not exist. Installing latest plugin version from hosting server (v$YAMJ_PLG_ONLINE_VER)"
         else
-          logger -trc.yamj -plocal7.info -is "Upgrading local plugin (v$YAMJ_PLG_LOCAL_VER) to hosting server plugin (v$YAMJ_PLG_ONLINE_VER)"
+          logit "Upgrading local plugin (v$YAMJ_PLG_LOCAL_VER) to hosting server plugin (v$YAMJ_PLG_ONLINE_VER)"
         fi
         # Download new plugin version
         wget --no-check-certificate --quiet --timeout=60 $YAMJ_PLG_URL -O /boot/config/plugins/yamj.plg
         # Install new plugin
         /usr/local/sbin/installplg /boot/config/plugins/yamj.plg
-        logger -trc.yamj -plocal7.info -is "New/Updated plugin installation complete"
+        logit "New/Updated plugin installation complete"
       # Plugin hosting server is offline
       else
-        logger -trc.yamj -plocal7.info -is "Local plugin is the same version as on hosting server (v$YAMJ_PLG_LOCAL_VER)"
+        logit "Local plugin is the same version as on hosting server (v$YAMJ_PLG_LOCAL_VER)"
       fi
     # Online version and local version are the same
     else
-      logger -trc.yamj -plocal7.info -is "Plugin does not exist on plugin hosting server - Cannot download new plugin"
+      logit "Plugin does not exist on plugin hosting server - Cannot download new plugin"
     fi
   else
-    logger -trc.yamj -plocal7.info -is "YAMJ Plugin hosting servers is OFFLINE - Cannot check for new packages versions"
+    logit "YAMJ Plugin hosting servers is OFFLINE - Cannot check for new packages versions"
   fi
 }
 
@@ -407,13 +420,13 @@ yamj_runscript()
   # Check if YAMJ exists
   if [ -d $YAMJ_LOCATION ] ; then
     if [ -f $YAMJ_RUN_SCRIPT ] ; then
-      logger -trc.yamj -plocal7.info -is "Running YAMJ script in background ..."
+      logit "Running YAMJ script in background ..."
       nohup $YAMJ_RUN_SCRIPT > $YAMJ_RUN_SCRIPT_OUT 2>&1 &
     else
-      logger -trc.yamj -plocal7.info -is "YAMJ script ($YAMJ_RUN_SCRIPT) does not exist - Nothing to run"
+      logit "YAMJ script ($YAMJ_RUN_SCRIPT) does not exist - Nothing to run"
     fi
   else
-    logger -trc.yamj -plocal7.info -is "YAMJ installation ($YAMJ_LOCATION) does not exist - Cannot run script"
+    logit "YAMJ installation ($YAMJ_LOCATION) does not exist - Cannot run script"
   fi
 }
 
@@ -424,36 +437,36 @@ yamj_boot()
 {
   # Check if new plugin should be updated during array mount
   if [ $UPGRADE_PLG_ON_BOOT == "true" ] ; then
-    logger -trc.yamj -plocal7.info -is "Checking for YAMJ plugin update during array mount ..."
+    logit "Checking for YAMJ plugin update during array mount ..."
     yamj_updateplg
   # Plugin update should not be done during boot
   else
-    logger -trc.yamj -plocal7.info -is "YAMJ plugin update during array mount is disabled"
+    logit "YAMJ plugin update during array mount is disabled"
   fi
 
   # Check if YAMJ CRON job should be added during array mount
   if [ $YAMJ_ADD_CRON_ON_BOOT == "true" ] ; then
-    logger -trc.yamj -plocal7.info -is "Adding Scheduled YAMJ Scan during array mount ..."
+    logit "Adding Scheduled YAMJ Scan during array mount ..."
     yamj_removecron
     yamj_addcron
   else
-    logger -trc.yamj -plocal7.info -is "Adding Scheduled YAMJ Scan during array mount is disabled"
+    logit "Adding Scheduled YAMJ Scan during array mount is disabled"
   fi
 
   # Check if YAMJ Stable verison should be downloaded during array mount
   if [ $YAMJ_DOWN_STABLE_ON_BOOT == "true" ] ; then
-    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Stable version during array mount ..."
+    logit "Downloading Latest YAMJ Stable version during array mount ..."
     yamj_donload_fnl
   else
-    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Stable version during array mount is disabled"
+    logit "Downloading Latest YAMJ Stable version during array mount is disabled"
   fi
 
   # Check if YAMJ Snapshot verison should be downloaded during array mount
   if [ $YAMJ_DOWN_SNAPSHOT_ON_BOOT == "true" ] ; then
-    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Snapshot version during array mount ..."
+    logit "Downloading Latest YAMJ Snapshot version during array mount ..."
     yamj_download_snp
   else
-    logger -trc.yamj -plocal7.info -is "Downloading Latest YAMJ Snapshot version during array mount is disabled"
+    logit "Downloading Latest YAMJ Snapshot version during array mount is disabled"
   fi
 
 }
@@ -467,7 +480,7 @@ yamj_removecron()
   crontab -l | grep -v "# Scheduled YAMJ Scan" | grep -v $YAMJ_RUN_SCRIPT > /tmp/yamj_crontab
   crontab /tmp/yamj_crontab
   rm --force /tmp/yamj_crontab
-  logger -trc.yamj -plocal7.info -is "Deleted Scheduled YAMJ Scan from crontab if existed"
+  logit "Deleted Scheduled YAMJ Scan from crontab if existed"
 }
 
 ###################
@@ -481,7 +494,7 @@ yamj_addcron()
   echo "${YAMJ_CRON_MIN} ${YAMJ_CRON_HOUR} ${YAMJ_CRON_DAY} ${YAMJ_CRON_MONTH} ${YAMJ_CRON_WEEKDAY} ${YAMJ_RUN_SCRIPT} > ${YAMJ_RUN_SCRIPT_OUT} 2>&1" >> /tmp/yamj_crontab
   crontab /tmp/yamj_crontab
   rm --force /tmp/yamj_crontab
-  logger -trc.yamj -plocal7.info -is "Added Scheduled YAMJ Scan to crontab"
+  logit "Added Scheduled YAMJ Scan to crontab"
 }
 
 ###################
@@ -518,7 +531,7 @@ yamj_updatecfg()
     if [ "$YAMJ_CRON_MIN_NEW" == "" ] || [ "$YAMJ_CRON_HOUR_NEW" == "" ] || [ "$YAMJ_CRON_DAY_NEW" == "" ] || \
        [ "$YAMJ_CRON_MONTH_NEW" == "" ] || [ "$YAMJ_CRON_WEEKDAY_NEW" == "" ] || [ "$YAMJ_RUN_SCRIPT_NEW" == "" ] || \
        [ "$YAMJ_RUN_SCRIPT_OUT_NEW" == "" ] ; then
-      logger -trc.yamj -plocal7.info -is "At least one Scheduled YAMJ Scan setting is missing - New schedule related settings not saved"
+      logit "At least one Scheduled YAMJ Scan setting is missing - New schedule related settings not saved"
     else
       # Check if any off the new CRON settings are different than the existing settings
       if [ "$YAMJ_CRON_MIN_NEW" != "$YAMJ_CRON_MIN" ] || [ "$YAMJ_CRON_HOUR_NEW" != "$YAMJ_CRON_HOUR" ] || \
@@ -556,16 +569,16 @@ yamj_updatecfg()
     if [ ! -d $YAMJ_DOWNLOAD_LOCATION_NEW ] ; then
       # Create new download location
       mkdir --parents $YAMJ_DOWNLOAD_LOCATION_NEW
-      logger -trc.yamj -plocal7.info -is "New download location created"
+      logit "New download location created"
     fi
     # Check if download location exists
     if [ -d $YAMJ_DOWNLOAD_LOCATION ] ; then
       # Move any existing files to new download location
       cp --force --recursive ${YAMJ_DOWNLOAD_LOCATION}/* ${YAMJ_DOWNLOAD_LOCATION_NEW}
       rm --force --recursive ${YAMJ_DOWNLOAD_LOCATION}
-      logger -trc.yamj -plocal7.info -is "Moved existing files from ${YAMJ_DOWNLOAD_LOCATION} (removed folder) to ${YAMJ_DOWNLOAD_LOCATION_NEW}"
+      logit "Moved existing files from ${YAMJ_DOWNLOAD_LOCATION} (removed folder) to ${YAMJ_DOWNLOAD_LOCATION_NEW}"
     else
-      logger -trc.yamj -plocal7.info -is "No download location currently exists - Nothing to do"
+      logit "No download location currently exists - Nothing to do"
     fi
   fi
   YAMJ_DOWNLOAD_LOCATION=$YAMJ_DOWNLOAD_LOCATION_NEW
@@ -991,11 +1004,11 @@ $version_actions_exist = "false";
         </tr>
         <tr>
           <td>Script used for running YAMJ scan:</td>
-          <td><input type="text" name="yamj_run_script" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>"></td>
+          <td><input type="text" name="yamj_run_script" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%2040%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
         </tr>
         <tr>
           <td>Log file to output YAMJ scan (use <i>/dev/null</i> for no log):</td>
-          <td><input type="text" name="yamj_run_script_out" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>"></td>
+          <td><input type="text" name="yamj_run_script_out" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%2040%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
         </tr>
         <tr>
           <td colspan="2">- To remove scheduled YAMJ scan clear all fields below</td>
