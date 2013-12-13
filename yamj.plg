@@ -9,7 +9,8 @@
 ############################################
 # Changlelog
 # ----------
-# 0.3.3    - Added plugin forum link to WEBUI
+# 0.3.3    - Duplicated all "logger" output also to regular output "echo"
+#          - Added plugin forum link to WEBUI
 #          - Added option to open last log in new window
 #          - Added option to open script file in new window
 #          - Added --timeout=60 to all wget commands
