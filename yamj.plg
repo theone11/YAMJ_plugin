@@ -3,7 +3,20 @@
 
 ############################################
 # YAMJ Plugin by Dan Kessler
-# Release Version v0.3.2.2
+# Release Version v0.3.2.3
+############################################
+
+############################################
+# Changlelog
+# ----------
+# 0.3.3    - Added plugin forum link to WEBUI
+#          - Added option to open last log in new window
+#          - Added option to open script file in new window
+#          - Added --timeout=60 to all wget commands
+# 0.3.2    - Fixed bottom of page is sometimes not visible due to unRAID progressframe
+# 0.3.1    - Fixed YAMJ manual background scan from WEBUI
+# 0.3      - Fixed possibility of multiple scheduled YAMJ Scans in crontab[/b]
+# 0.2      - Initial Release
 ############################################
 
 ############################################
@@ -842,6 +855,7 @@ $version_actions_exist = "false";
 
     <p>Stable version taken from <u><a href="http://code.google.com/p/moviejukebox/" target="_blank">MovieJukebox on Googlecode</a></u></p>
     <p>Snapshot version taken from <u><a href="http://mediaplayersite.com/YAMJ_Latest" target="_blank">YAMJ on Omertron's Media Player Site</a></u></p>
+    <p>unRAID forum thread for <u><a href="http://lime-technology.com/forum/index.php?topic=26128.0" target="_blank">YAMJ Plugin for unRAID v5</a></u></p>
 
   </div>
 
@@ -1004,11 +1018,11 @@ $version_actions_exist = "false";
         </tr>
         <tr>
           <td>Script used for running YAMJ scan:</td>
-          <td><input type="text" name="yamj_run_script" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%2040%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
+          <td><input type="text" name="yamj_run_script" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%20200%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
         </tr>
         <tr>
           <td>Log file to output YAMJ scan (use <i>/dev/null</i> for no log):</td>
-          <td><input type="text" name="yamj_run_script_out" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%2040%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
+          <td><input type="text" name="yamj_run_script_out" style="width: 17em;" maxlength="255" value="<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>"><a href="/update.htm?cmd=/usr/bin/tail%20-n%20200%20-f%20<?=$yamj_cfg['YAMJ_RUN_SCRIPT_OUT'];?>&forkCmd=Start" title="YAMJ Script" target="_blank"><img src="/plugins/simpleFeatures/icons/page_white_text.png" class="system"/></a></td>
         </tr>
         <tr>
           <td colspan="2">- To remove scheduled YAMJ scan clear all fields below</td>
